@@ -17,22 +17,24 @@ const App = () => {
     <>
       <Toaster/>
       <Routes>
-        <Route path="/" element={<Navigate to="/Dashboard" replace/>}/>
-        <Route path="/Login" element={<LoginLanding />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace/>}/>
+        <Route path="/login" element={<LoginLanding />} />
         <Route path="/login/admin" element={ <LoginForm role="admin" title="Admin Portal" subtitle="Sign in to manage the organization"/> }/>
 
         <Route path="/login/employee" element={ <LoginForm role="employee" title="Employee Portal" subtitle="Sign in to access your account"/> }/>      
         <Route element={<Layout/>}>
-          <Route path="/Dashboard" element={<Dashboard />} />
-          <Route path="/Employees" element={<Employees />} />
-          <Route path="/Attendance" element={<Attendance />} />
-          <Route path="/Payslip" element={<Payslip />} />
-          <Route path="/PrintPayslip" element={<PrintPayslip />} />
-          <Route path="/Setting" element={<Setting />} />
-          <Route path="/Leave" element={<Leave />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/employees" element={<Employees />} />
+          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/payslip" element={<Payslip />} />
+          <Route path="/printPayslip" element={<PrintPayslip />} />
+          <Route path="/setting" element={<Setting />} />
+          <Route path="/leave" element={<Leave />} />
         </Route> 
+        <Route path="/payslips" element={<Navigate to="/payslip" replace/>}/>
+        <Route path="/settings" element={<Navigate to="/setting" replace/>}/>
         <Route path="/print/payslip/:id" element={<PrintPayslip/>}/>
-        <Route path="*" element={<Navigate to="/Login" replace/>}/>
+        <Route path="*" element={<Navigate to="/login" replace/>}/>
       </Routes>
     </>
    
