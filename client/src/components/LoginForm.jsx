@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
 import LoginLeftSide from './LoginLeftSide'
 
 const LoginForm = ({ role, title, subtitle }) => {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -12,7 +13,10 @@ const LoginForm = ({ role, title, subtitle }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    // Authentication logic will go here later
+    setError('')
+    setLoading(true)
+    localStorage.setItem('emsRole', role)
+    navigate('/dashboard')
   }
 
   return (
