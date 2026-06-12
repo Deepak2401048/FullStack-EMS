@@ -12,7 +12,7 @@ const Sidebar = () => {
   const username = dummyProfileData.firstName + ' ' + dummyProfileData.lastName;
   const [role] = useState(() => {
     const savedRole = localStorage.getItem('emsRole');
-    return savedRole === 'admin' ? 'admin' : 'employee';
+    return savedRole === 'employee' ? 'employee' : 'admin';
   });
   const [mobileMenu, setMobileMenu] = useState(false);
 
