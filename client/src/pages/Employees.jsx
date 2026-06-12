@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, Plus, X } from 'lucide-react'
+import { Search, Plus, X, AlertTriangle } from 'lucide-react'
 import { DEPARTMENTS, dummyEmployeeData } from '../assets/assets'
 import EmployeeCard from '../components/EmployeeCard'
 
@@ -19,6 +19,7 @@ const Employees = () => {
   const [search, setSearch] = useState('')
   const [selectedDepartment, setSelectedDepartment] = useState('')
   const [editingEmployee, setEditingEmployee] = useState(null)
+  const [deletingEmployee, setDeletingEmployee] = useState(null)
   const [formData, setFormData] = useState(getEmployeeFormData())
 
   useEffect(() => {
@@ -68,9 +69,18 @@ const Employees = () => {
   }
 
   const handleDelete = (employee) => {
+    setDeletingEmployee(employee)
+  }
+
+  const closeDeleteModal = () => {
+    setDeletingEmployee(null)
+  }
+
+  const confirmDeleteEmployee = () => {
     setEmployees((currentEmployees) =>
-      currentEmployees.filter((item) => item.id !== employee.id)
+      currentEmployees.filter((item) => item.id !== deletingEmployee.id)
     )
+    closeDeleteModal()
   }
 
   const handleFormChange = (event) => {
@@ -297,6 +307,49 @@ const Employees = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deletingEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+            <div className="px-6 py-5">
+              <div className="mb-4 flex items-start gap-4">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+                  <AlertTriangle className="size-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    Delete employee?
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    This will remove {deletingEmployee.firstName} {deletingEmployee.lastName} from the employee list.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-md border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                This action cannot be undone in the current session.
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteEmployee}
+                className="rounded-md bg-rose-600 px-5 py-2.5 text-sm text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
+              >
+                Delete Employee
+              </button>
+            </div>
           </div>
         </div>
       )}
