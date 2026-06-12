@@ -2,15 +2,6 @@ import { PencilIcon, Trash2Icon } from 'lucide-react'
 
 const EmployeeCard = ({ employee, onEdit, onDelete }) => {
 
-  // Function to handle the deletion of an employee
-  const handleDelete = () => {
-    if (!window.confirm("Are you sure you want to delete this employee?")) {
-      return;
-    }
-
-    onDelete?.(employee);
-  }
-
   return (
     <div className="card overflow-hidden relative group">
       
@@ -40,7 +31,7 @@ const EmployeeCard = ({ employee, onEdit, onDelete }) => {
               <PencilIcon className="size-4" />
             </button>
             <button 
-              onClick={handleDelete}
+              onClick={() => onDelete?.(employee)}
               className="p-2 bg-white text-slate-600 hover:text-red-600 rounded-lg shadow-sm transition-colors"
               title="Delete Employee"
             >
