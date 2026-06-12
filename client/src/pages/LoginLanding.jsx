@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
 import { Shield, User, ArrowRight } from 'lucide-react'
 import LoginLeftSide from '../components/LoginLeftSide'
@@ -31,7 +30,7 @@ const LoginLanding = () => {
           
           {/* Header Section */}
           <div className="mb-8">
-            <h2 className="text-3xl font-semibold text-slate-900 mb-2">Welcome back</h2>
+            <h2 className="text-3xl font-semibold text-slate-900 mb-2">Welcome Back</h2>
             <p className="text-slate-500">Please select your portal to continue</p>
           </div>
 

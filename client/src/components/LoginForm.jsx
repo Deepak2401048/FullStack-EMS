@@ -30,7 +30,7 @@ const LoginForm = ({ role, title, subtitle }) => {
             to="/login" 
             className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-600 text-sm mb-10 transition-colors"
           >
-            <ArrowLeft size={16} /> Back to portals
+            <ArrowLeft size={16} /> Back to Portals
           </Link>
 
           <div className="mb-8">
