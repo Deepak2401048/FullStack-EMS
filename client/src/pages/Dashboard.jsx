@@ -7,9 +7,9 @@ import AdminDashboard from "../components/AdminDashboard"
 const getDashboardData = () => {
   const savedRole = localStorage.getItem("emsRole")
 
-  return savedRole === "admin"
-    ? dummyAdminDashboardData
-    : dummyEmployeeDashboardData
+  return savedRole === "employee"
+    ? dummyEmployeeDashboardData
+    : dummyAdminDashboardData
 }
 
 const Dashboard = () => {
