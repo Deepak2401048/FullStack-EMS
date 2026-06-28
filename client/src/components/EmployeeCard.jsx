@@ -1,6 +1,7 @@
 import { PencilIcon, Trash2Icon } from 'lucide-react'
 
 const EmployeeCard = ({ employee, onEdit, onDelete }) => {
+  const employeeCode = employee?.employeeCode || employee?.id?.slice(-6)?.toUpperCase()
 
   return (
     <div className="card overflow-hidden relative group">
@@ -53,12 +54,27 @@ const EmployeeCard = ({ employee, onEdit, onDelete }) => {
 
       {/* Bottom Information Section */}
       <div className="pt-14 pb-6 px-6 text-center">
+        {employeeCode && (
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            {employeeCode}
+          </p>
+        )}
         <h3 className="text-lg font-bold text-slate-900 mb-1">
           {employee?.firstName} {employee?.lastName}
         </h3>
         <p className="text-sm font-medium text-slate-500">
           {employee?.position}
         </p>
+        <div className="mt-4 grid grid-cols-2 gap-2 text-left text-xs text-slate-500">
+          <div className="rounded-md bg-slate-50 px-3 py-2">
+            <p className="font-medium text-slate-400">Type</p>
+            <p className="mt-1 truncate text-slate-700">{employee?.employmentType || 'Full-time'}</p>
+          </div>
+          <div className="rounded-md bg-slate-50 px-3 py-2">
+            <p className="font-medium text-slate-400">Location</p>
+            <p className="mt-1 truncate text-slate-700">{employee?.workLocation || 'On-site'}</p>
+          </div>
+        </div>
       </div>
       
     </div>

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
-  Menu, X, User, LayoutGrid, Calendar, 
+  X, User, LayoutGrid, Calendar, 
   FileText, DollarSign, Settings, LogOut 
 } from 'lucide-react';
 import { dummyProfileData } from '../assets/assets';
 
-const Sidebar = () => {
+const Sidebar = ({ mobileMenu, onMobileMenuClose }) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const username = dummyProfileData.firstName + ' ' + dummyProfileData.lastName;
@@ -14,7 +14,6 @@ const Sidebar = () => {
     const savedRole = localStorage.getItem('emsRole');
     return savedRole === 'employee' ? 'employee' : 'admin';
   });
-  const [mobileMenu, setMobileMenu] = useState(false);
 
   // Handle user logout
   const handleLogout = () => {
@@ -47,7 +46,7 @@ const Sidebar = () => {
         </div>
         <button 
           className="lg:hidden text-gray-400 hover:text-white" 
-          onClick={() => setMobileMenu(false)}
+          onClick={onMobileMenuClose}
         >
           <X size={20} />
         </button>
@@ -85,7 +84,7 @@ const Sidebar = () => {
             <Link
               key={item.name}
               to={item.href}
-              onClick={() => setMobileMenu(false)}
+              onClick={onMobileMenuClose}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${
                 isActive 
                   ? 'bg-indigo-500/10 text-indigo-300' 
@@ -117,19 +116,11 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile Hamburger Button */}
-      <button 
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-900 rounded-md text-white shadow-md"
-        onClick={() => setMobileMenu(true)}
-      >
-        <Menu size={20} />
-      </button>
-
       {/* Mobile Overlay (Semi-transparent black background behind the menu) */}
       {mobileMenu && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setMobileMenu(false)}
+          onClick={onMobileMenuClose}
         />
       )}
 
