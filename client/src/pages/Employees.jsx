@@ -17,6 +17,9 @@ const ALLOWED_EMAIL_DOMAINS = new Set([
   'protonmail.com',
 ])
 
+const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Intern']
+const WORK_LOCATIONS = ['On-site', 'Remote', 'Hybrid']
+
 const isEmailDomainAllowed = (email) => {
   const domain = email?.trim().split('@')[1]?.toLowerCase()
   return domain ? ALLOWED_EMAIL_DOMAINS.has(domain) : false
@@ -77,6 +80,7 @@ const isJoinDateWithin6MonthsAhead = (joinDateStr) => {
 }
 
 const getEmployeeFormData = (employee) => ({
+  employeeCode: employee?.employeeCode || '',
   firstName: employee?.firstName || '',
   lastName: employee?.lastName || '',
   email: employee?.email || '',
@@ -85,6 +89,12 @@ const getEmployeeFormData = (employee) => ({
   department: employee?.department || '',
   joinDate: getDateInputValue(employee?.joinDate),
   employmentStatus: employee?.employmentStatus || 'ACTIVE',
+  employmentType: employee?.employmentType || 'Full-time',
+  workLocation: employee?.workLocation || 'On-site',
+  managerName: employee?.managerName || '',
+  emergencyContactName: employee?.emergencyContactName || '',
+  emergencyContactPhone: employee?.emergencyContactPhone || '',
+  address: employee?.address || '',
   bio: employee?.bio || '',
   basicSalary:
     typeof employee?.basicSalary === 'number'
@@ -107,6 +117,15 @@ const createEmployeeId = () => {
   }
 
   return `employee-${Date.now()}`
+}
+
+const createEmployeeCode = (employees) => {
+  const highestNumber = employees.reduce((highest, employee) => {
+    const codeNumber = Number(employee.employeeCode?.match(/^EMP-(\d+)$/i)?.[1])
+    return Number.isFinite(codeNumber) ? Math.max(highest, codeNumber) : highest
+  }, 0)
+  const nextNumber = highestNumber + 1
+  return `EMP-${String(nextNumber).padStart(4, '0')}`
 }
 
 const Employees = () => {
@@ -151,6 +170,10 @@ const Employees = () => {
         employee.email,
         employee.phone,
         employee.employmentStatus,
+        employee.employeeCode,
+        employee.employmentType,
+        employee.workLocation,
+        employee.managerName,
       ]
         .filter(Boolean)
         .join(' ')
@@ -167,7 +190,10 @@ const Employees = () => {
   const openAddModal = () => {
     setIsAddingEmployee(true)
     setEditingEmployee(null)
-    setFormData(getEmployeeFormData())
+    setFormData({
+      ...getEmployeeFormData(),
+      employeeCode: createEmployeeCode(employees),
+    })
   }
 
   const handleEdit = (employee) => {
@@ -223,6 +249,7 @@ const Employees = () => {
     }
 
     const cleanedFormData = {
+      employeeCode: formData.employeeCode.trim(),
       firstName: formData.firstName.trim(),
       lastName: formData.lastName.trim(),
       email: formData.email.trim().toLowerCase(),
@@ -231,11 +258,22 @@ const Employees = () => {
       department: formData.department,
       joinDate: joinIso,
       employmentStatus: formData.employmentStatus,
+      employmentType: formData.employmentType,
+      workLocation: formData.workLocation,
+      managerName: formData.managerName.trim(),
+      emergencyContactName: formData.emergencyContactName.trim(),
+      emergencyContactPhone: formData.emergencyContactPhone.trim(),
+      address: formData.address.trim(),
       bio: formData.bio.trim(),
       basicSalary: Number(formData.basicSalary) || 0,
       allowances: Number(formData.allowances) || 0,
       deductions: Number(formData.deductions) || 0,
       dateOfBirth: dobIso,
+    }
+
+    if (!cleanedFormData.employeeCode) {
+      toast.error('Employee code is required')
+      return
     }
 
     if (!isEmailDomainAllowed(cleanedFormData.email)) {
@@ -255,6 +293,17 @@ const Employees = () => {
 
     if (emailExists) {
       toast.error('An employee with this email already exists')
+      return
+    }
+
+    const employeeCodeExists = employees.some(
+      (employee) =>
+        employee.employeeCode?.toLowerCase() === cleanedFormData.employeeCode.toLowerCase() &&
+        employee.id !== editingEmployee?.id
+    )
+
+    if (employeeCodeExists) {
+      toast.error('An employee with this employee code already exists')
       return
     }
 
@@ -314,84 +363,119 @@ const Employees = () => {
 
   return (
     <div className="animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="page-title">Employees</h1>
-          <p className="page-subtitle">Manage your team members</p>
-        </div>
-        <button
-          type="button"
-          onClick={openAddModal}
-          className="btn-primary flex items-center justify-center gap-2"
-        >
-          <Plus className="size-4" /> Add Employee
-        </button>
-      </div>
-
-      {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search employee..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-10 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-          />
-          {search && (
+      {/* Sticky top controls */}
+      <div
+        className="sticky top-0 z-20 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70"
+      >
+        <div className="pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 px-1 sm:pl-0 pl-12">
+            <div>
+              <h1 className="page-title">Employees</h1>
+              <p className="page-subtitle">Manage your team members</p>
+            </div>
             <button
               type="button"
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              aria-label="Clear search"
+              onClick={openAddModal}
+              className="btn-primary flex items-center justify-center gap-2"
             >
-              <X className="size-4" />
+              <Plus className="size-4" /> Add Employee
             </button>
-          )}
+          </div>
+
+          {/* Search Bar + Filters (mobile expandable) */}
+          <div className="flex flex-col gap-3 mb-6 px-1">
+            {/* Mobile: Filters button */}
+            <div className="flex items-center gap-3 sm:hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !document.documentElement.dataset.emFiltersOpen
+                  document.documentElement.dataset.emFiltersOpen = next ? 'true' : ''
+                  const el = document.getElementById('employee-filters')
+                  if (el) el.style.display = next ? 'block' : 'none'
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm"
+                aria-label="Toggle filters"
+              >
+                <Search className="size-4" />
+                <span>Filters</span>
+              </button>
+            </div>
+
+            {/* Desktop + Mobile expanded */}
+            <div
+              id="employee-filters"
+              className="flex flex-col sm:flex-row sm:items-center gap-4"
+              style={{ display: 'flex' }}
+            >
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search employee..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    aria-label="Clear search"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+              <select
+                value={selectedDepartment}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                className="w-full sm:max-w-xs py-2 px-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              >
+                <option value="">All Departments</option>
+                {DEPARTMENTS.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
         </div>
-        <select
-          value={selectedDepartment}
-          onChange={(e) => setSelectedDepartment(e.target.value)}
-          className="w-full sm:max-w-xs py-2 px-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-        >
-          <option value="">All Departments</option>
-          {DEPARTMENTS.map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
-            </option>
-          ))}
-        </select>
       </div>
 
-      {/* Employee Cards List */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin size-8 border-2 border-indigo-600 border-t-transparent rounded-full" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.length === 0 ? (
-            <p className="col-span-full text-center text-slate-500 py-12">
-              No employees found
-            </p>
-          ) : (
-            filtered.map((employee) => (
-              <EmployeeCard
-                key={employee.id}
-                employee={employee}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))
-          )}
-        </div>
-      )}
+      {/* Employee Cards List (scrollable) */}
+      <div className="h-[calc(100vh-220px)] overflow-y-auto pr-1">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin size-8 border-2 border-indigo-600 border-t-transparent rounded-full" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.length === 0 ? (
+              <p className="col-span-full text-center text-slate-500 py-12">
+                No employees found
+              </p>
+            ) : (
+              filtered.map((employee) => (
+                <EmployeeCard
+                  key={employee.id}
+                  employee={employee}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
 
       {isEmployeeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 px-4 py-8 backdrop-blur-sm backdrop-saturate-150 sm:py-10">
-          <div className="flex max-h-[calc(100vh-5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:max-h-[calc(100vh-6rem)]">
+          <div className="flex max-h-[calc(100vh-5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:max-h-[calc(100vh-6rem)]">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
@@ -415,190 +499,327 @@ const Employees = () => {
 
             <form
               onSubmit={handleSaveEmployee}
-              className="space-y-5 overflow-y-auto px-6 py-5"
+              className="space-y-6 overflow-y-auto px-6 py-5"
             >
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    First name
-                  </label>
-                  <input
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleFormChange}
-                    required
-                  />
+                  <h3 className="text-sm font-semibold text-slate-900">Personal Info</h3>
+                  <p className="text-xs text-slate-500">Basic identity and contact details.</p>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Last name
-                  </label>
-                  <input
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleFormChange}
-                    required
-                  />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      First name
+                    </label>
+                    <input
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Last name
+                    </label>
+                    <input
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Email
+                    </label>
+                    <input
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Phone
+                    </label>
+                    <input
+                      name="phone"
+                      type="tel"
+                      inputMode="tel"
+                      value={formData.phone}
+                      onChange={handleFormChange}
+                      placeholder="9000000001"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Date of birth (DOB)
+                    </label>
+                    <input
+                      name="dateOfBirth"
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={handleFormChange}
+                      required
+                      max={(() => {
+                        const d = new Date()
+                        d.setFullYear(d.getFullYear() - 18)
+                        return d.toISOString().slice(0, 10)
+                      })()}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Email
-                  </label>
-                  <input
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Phone
-                  </label>
-                  <input
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Position
-                  </label>
-                  <input
-                    name="position"
-                    value={formData.position}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Department
-                  </label>
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleFormChange}
-                    required
-                  >
-                    <option value="">Select department</option>
-                    {DEPARTMENTS.map((department) => (
-                      <option key={department} value={department}>
-                        {department}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Status
-                  </label>
-                  <select
-                    name="employmentStatus"
-                    value={formData.employmentStatus}
-                    onChange={handleFormChange}
-                    required
-                  >
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Date of birth (DOB)
-                  </label>
-                  <input
-                    name="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={handleFormChange}
-                    required
-                    max={(() => {
-                      const d = new Date()
-                      d.setFullYear(d.getFullYear() - 18)
-                      return d.toISOString().slice(0, 10)
-                    })()}
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Date of joining (DOJ)
-                  </label>
-                  <input
-                    name="joinDate"
-                    type="date"
-                    value={formData.joinDate}
-                    onChange={handleFormChange}
-                    required
-                    min={new Date().toISOString().slice(0, 10)}
-                    max={(() => {
-                      const d = new Date()
-                      d.setMonth(d.getMonth() + 6)
-                      return d.toISOString().slice(0, 10)
-                    })()}
-                  />
-                </div>
+              </div>
 
+              <div className="space-y-4 border-t border-slate-200 pt-5">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Basic Salary
-                  </label>
-                  <input
-                    name="basicSalary"
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    step="0.01"
-                    value={formData.basicSalary}
-                    onChange={handleFormChange}
-                    required
-                  />
+                  <h3 className="text-sm font-semibold text-slate-900">Job Details</h3>
+                  <p className="text-xs text-slate-500">Role, department, status, and reporting information.</p>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Allowances
-                  </label>
-                  <input
-                    name="allowances"
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    step="0.01"
-                    value={formData.allowances}
-                    onChange={handleFormChange}
-                    required
-                  />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Employee code
+                    </label>
+                    <input
+                      name="employeeCode"
+                      value={formData.employeeCode}
+                      onChange={handleFormChange}
+                      placeholder="EMP-0001"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Position
+                    </label>
+                    <input
+                      name="position"
+                      value={formData.position}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Department
+                    </label>
+                    <select
+                      name="department"
+                      value={formData.department}
+                      onChange={handleFormChange}
+                      required
+                    >
+                      <option value="">Select department</option>
+                      {DEPARTMENTS.map((department) => (
+                        <option key={department} value={department}>
+                          {department}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Employment type
+                    </label>
+                    <select
+                      name="employmentType"
+                      value={formData.employmentType}
+                      onChange={handleFormChange}
+                      required
+                    >
+                      {EMPLOYMENT_TYPES.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Work location
+                    </label>
+                    <select
+                      name="workLocation"
+                      value={formData.workLocation}
+                      onChange={handleFormChange}
+                      required
+                    >
+                      {WORK_LOCATIONS.map((location) => (
+                        <option key={location} value={location}>
+                          {location}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Status
+                    </label>
+                    <select
+                      name="employmentStatus"
+                      value={formData.employmentStatus}
+                      onChange={handleFormChange}
+                      required
+                    >
+                      <option value="ACTIVE">Active</option>
+                      <option value="INACTIVE">Inactive</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Date of joining (DOJ)
+                    </label>
+                    <input
+                      name="joinDate"
+                      type="date"
+                      value={formData.joinDate}
+                      onChange={handleFormChange}
+                      required
+                      min={new Date().toISOString().slice(0, 10)}
+                      max={(() => {
+                        const d = new Date()
+                        d.setMonth(d.getMonth() + 6)
+                        return d.toISOString().slice(0, 10)
+                      })()}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Manager
+                    </label>
+                    <input
+                      name="managerName"
+                      value={formData.managerName}
+                      onChange={handleFormChange}
+                      placeholder="Reporting manager"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Deductions
-                  </label>
-                  <input
-                    name="deductions"
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    step="0.01"
-                    value={formData.deductions}
-                    onChange={handleFormChange}
-                    required
-                  />
-                </div>
+              </div>
 
-                <div className="sm:col-span-2">
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Bio
-                  </label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleFormChange}
-                    rows={4}
-                    placeholder="Brief employee profile, skills, or notes"
-                  />
+              <div className="space-y-4 border-t border-slate-200 pt-5">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Compensation</h3>
+                  <p className="text-xs text-slate-500">Payroll inputs used for salary and payslip calculations.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Basic Salary
+                    </label>
+                    <input
+                      name="basicSalary"
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.01"
+                      value={formData.basicSalary}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Allowances
+                    </label>
+                    <input
+                      name="allowances"
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.01"
+                      value={formData.allowances}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Deductions
+                    </label>
+                    <input
+                      name="deductions"
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.01"
+                      value={formData.deductions}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t border-slate-200 pt-5">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Emergency Contact</h3>
+                  <p className="text-xs text-slate-500">Optional contact details for urgent situations.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Emergency contact name
+                    </label>
+                    <input
+                      name="emergencyContactName"
+                      value={formData.emergencyContactName}
+                      onChange={handleFormChange}
+                      placeholder="Contact person"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Emergency contact phone
+                    </label>
+                    <input
+                      name="emergencyContactPhone"
+                      type="tel"
+                      inputMode="tel"
+                      value={formData.emergencyContactPhone}
+                      onChange={handleFormChange}
+                      placeholder="Emergency number"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t border-slate-200 pt-5">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">Additional Details</h3>
+                  <p className="text-xs text-slate-500">Address and profile notes.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Address
+                    </label>
+                    <textarea
+                      name="address"
+                      value={formData.address}
+                      onChange={handleFormChange}
+                      rows={3}
+                      placeholder="Current residential address"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Bio
+                    </label>
+                    <textarea
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleFormChange}
+                      rows={4}
+                      placeholder="Brief employee profile, skills, or notes"
+                    />
+                  </div>
                 </div>
               </div>
 

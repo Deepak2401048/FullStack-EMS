@@ -54,6 +54,25 @@
         @apply px-6 py-4;
     }
 
+    /* Thin dashboard scrollbar for scrollable table containers */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        @apply rounded-full bg-slate-300;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        @apply bg-slate-400;
+    }
+
     /* Badge styles */
     .badge {
         @apply inline-flex items-center px-2.5 py-1 rounded-md text-xs;
